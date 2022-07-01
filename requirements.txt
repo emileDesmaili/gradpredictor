@@ -1,2 +1,6 @@
 streamlit
 streamlit-option-menu
+seaborn
+statsmodel
+sklearn
+matplotlib

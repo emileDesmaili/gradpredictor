@@ -4,9 +4,9 @@ from streamlit_option_menu import option_menu
 
 # PAGE SETUP
 st.set_page_config(
-    page_title="MyP4K",
+    page_title="GradPredictor",
     layout="wide",
-    page_icon="streamlit_assets/assets/p4k_logo.png",
+    page_icon="streamlit_assets/assets/icon_logo.PNG",
 
 )
 
@@ -32,7 +32,7 @@ st.sidebar.write(f'# Welcome')
 
 page_container = st.sidebar.container()
 with page_container:
-    page = option_menu("Menu", ["CHanceMe!", "Model"], 
+    page = option_menu("Menu", ["ChanceMe!", "Model"], 
     icons=['reddit','dpad'], menu_icon="cast", default_index=0)
 
 
@@ -41,3 +41,5 @@ def load_csv():
     return pd.read_csv('data/admission_data.csv')
 
 data = load_csv()
+
+if page =="ChanceMe!":
