@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from streamlit_option_menu import option_menu
+import pickle
 
 # PAGE SETUP
 st.set_page_config(
@@ -39,7 +40,16 @@ with page_container:
 @st.cache()
 def load_csv():
     return pd.read_csv('data/admission_data.csv')
+@st.cache():
+
+@st.cache(allow_output_mutation=True)
+def load_predictor():
+    filename = 'models/pls_model.sav'
+    loaded_model = pickle.load(open(filename, 'rb'))
+    return loaded_model
 
 data = load_csv()
 
 if page =="ChanceMe!":
+    model = load_predictor()
+    
