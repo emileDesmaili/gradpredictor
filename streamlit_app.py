@@ -3,6 +3,7 @@ import pandas as pd
 from streamlit_option_menu import option_menu
 import pickle
 import numpy as np
+import math
 
 # PAGE SETUP
 st.set_page_config(
@@ -48,10 +49,17 @@ def load_predictor():
     loaded_model = pickle.load(open(filename, 'rb'))
     return loaded_model
 
+@st.cache(allow_output_mutation=True)
+def load_classifier():
+    filename = 'models/class_model.sav'
+    loaded_model = pickle.load(open(filename, 'rb'))
+    return loaded_model
+
 data = load_csv()
 
 if page =="ChanceMe!":
     model = load_predictor()
+    classifier = load_classifier()
 
     with st.form('Chancer'):
         filter1, filter2, filter3, filter4, filter5, filter6 = st.columns(6)
@@ -70,21 +78,25 @@ if page =="ChanceMe!":
         
         
         submitted = st.form_submit_button('ChanceMe!')
-    proba_t5 = model.predict(np.array([gre, toefl, 1, sop, lor, gpa, research]).reshape(1,-1))
-    proba_t4 = model.predict(np.array([gre, toefl, 2, sop, lor, gpa, research]).reshape(1,-1))
-    proba_t3 = model.predict(np.array([gre, toefl, 3, sop, lor, gpa, research]).reshape(1,-1))
-    proba_t2 = model.predict(np.array([gre, toefl, 4, sop, lor, gpa, research]).reshape(1,-1))
-    proba_t1 = model.predict(np.array([gre, toefl, 5, sop, lor, gpa, research]).reshape(1,-1))
-    col1, col2, col3, col4, col5 = st.columns(5)
+    uni_tier = classifier.predict(np.array([gre, toefl, sop, lor, gpa, research]).reshape(1,-1))
+    uni_tier = int(uni_tier)
+    if uni_tier == 5:
+        uni_tier = 1
+    elif uni_tier == 4:
+        uni_tier = 2
+    elif uni_tier == 2:
+        uni_tier = 4
+    elif uni_tier == 1:
+        uni_tier = 5
+    proba = model.predict(np.array([gre, toefl, int(uni_tier), sop, lor, gpa, research]).reshape(1,-1))
+
+    # outcome_df
+
+    col1, col2= st.columns(2)
     with col1:
-        st.metric('Probability of getting in a Tier 1 University', np.round(proba_t1,3))
+        st.write(f'Because of Self-censorship you will apply to Tier {uni_tier} colleges')
     with col2:
-        st.metric('Probability of getting in a Tier 2 University', np.round(proba_t2,3))
-    with col3:
-        st.metric('Probability of getting in a Tier 3 University', np.round(proba_t3,3))
-    with col4:
-        st.metric('Probability of getting in a Tier 4 University', np.round(proba_t4,3))
-    with col5:
-        st.metric('Probability of getting in a Tier 5 University', np.round(proba_t5,3))
+        st.metric(f'Probability of getting in a Tier {uni_tier} University', np.round(proba,3))
+
 
 
