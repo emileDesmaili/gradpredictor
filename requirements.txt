@@ -5,3 +5,5 @@ statsmodel
 sklearn
 matplotlib
 plotly
+numpy
+pandas
