@@ -78,11 +78,11 @@ if page =="ChanceMe!":
         with filter3:
             lor = st.slider('LORs strength',1,5,step=1)
         with filter4:
-            toefl = st.number_input('TOEFL score',max_value=120,step=1)
+            toefl = st.number_input('TOEFL score',max_value=120, value= 100, step=1)
         with filter5:
-            gre = st.number_input('GRE score',max_value=340,step=10)
+            gre = st.number_input('GRE score',max_value=340, value=300, step=10)
         with filter6:
-            gpa = st.number_input('GPA out of 10',max_value=10.,step=0.01)
+            gpa = st.number_input('GPA out of 10',max_value=10.,step=0.5, value=7.0)
         
         
         submitted = st.form_submit_button('ChanceMe!')
@@ -121,7 +121,7 @@ if page =='Model':
     st.write('#### The University Tier feature is problematic, and not usable because of self-censoship, so I decided to use a **KNN classifier** to infer it from other features')
     st.write('Table: Average values grouped by University Rating: self-censorship much...?')
     st.write(df.groupby(['University Rating']).mean())
-    st.write('#### Start simple:  Linear Regresion')
+    st.write('#### Start simple:  Linear Regression... cannot be used')
     
     col1, col2 = st.columns(2)
     with col1:
@@ -130,7 +130,7 @@ if page =='Model':
         st.plotly_chart(fig, use_container_width=False)
     with col2:
         
-        X = st.multiselect('Select Regressors', df.columns)
+        X = st.multiselect('Select Regressors', df.columns, ['CGPA'])
         Y = df['Chance of Admit ']
         model = sm.OLS(Y, df[X], hasconst=True)
         results = model.fit()
@@ -146,12 +146,12 @@ if page =='Model':
         fig.update_layout(showlegend=True, xaxis_title='Predicted')
         st.plotly_chart(fig)
 
-    st.write('#### Given how multicollinear the data is, I decided to use **Projection methods** like **Partial Least Squares** or **Principal Components Regression**')
+    st.write('#### Given how multicollinear the data is, I decided to use **Projection methods** like **Partial Least Squares** & **Principal Components Regression**')
     
     col1, col2 = st.columns(2)
     with col1:
-        test_size = st.slider('Select test size',0.0,1.0,step=0.05)
-        n_components = st.slider('Number of components to keep',1,7)
+        test_size = st.slider('Select test size',0.05,1.0,step=0.05, value=0.2)
+        n_components = st.slider('Number of components to keep',1,6, value=3)
     X = df.drop(['Chance of Admit ', 'University Rating'], axis=1)
     Y = df['Chance of Admit ']
     X_train, X_test, y_train, y_test = train_test_split(X, Y,test_size = test_size, random_state=42)
@@ -159,11 +159,31 @@ if page =='Model':
     pcr = make_pipeline(StandardScaler(), PCA(n_components=n_components), LinearRegression())
     pcr.fit(X_train, y_train)
     pca = pcr.named_steps["pca"]  # retrieve the PCA step of the pipeline
+    ols = pcr.named_steps["linearregression"]
     pls = PLSRegression(n_components=n_components)
     pls.fit(X_train, y_train)
-    y_hat = pls.predict(X_test)
-    y_hat[0][0]
-    y_test.values[0]
-    with col2:
-        fig = px.scatter(list(zip(y_hat,y_test.values)))
+    y_hat_pls = pls.predict(X_test).reshape(len(y_test))
+    y_hat_pcr = pcr.predict(X_test).reshape(len(y_test))
+    with col1:
+        st.write('**Model Results & Coefficients**')
+        st.write(f"PCR model R2: **{pcr.score(X_test, y_test):.3f}**")
+        st.write(f"PLS model R2: **{pls.score(X_test, y_test):.3f}**")
+        coefs_pls = pls.coef_.reshape(len(X.T))
+        coefs_pcr = pca.inverse_transform(ols.coef_).T
+        coefs = pd.DataFrame(list(zip(coefs_pls,coefs_pcr)), columns = ['PLS','PCR'],index=X.columns)
+        fig = px.bar(coefs, barmode="group")
+        fig.update_layout({'plot_bgcolor': 'rgba(0, 0, 0, 0)','paper_bgcolor': 'rgba(0, 0, 0, 0)',}) 
         st.plotly_chart(fig)
+    
+
+    with col2:
+        df = pd.DataFrame(list(zip(y_test, y_hat_pls, y_hat_pcr)), columns=['Actual','PLS','PCR'])
+        fig = px.scatter(df,x='Actual',y=['PLS','PCR'])
+        fig.update_layout({'plot_bgcolor': 'rgba(0, 0, 0, 0)','paper_bgcolor': 'rgba(0, 0, 0, 0)',}) 
+        fig.update_layout(showlegend=True, xaxis_title='actual')
+        st.write(f'**PCR & PLS results with {n_components} components**')
+
+        st.plotly_chart(fig)
+        st.write('#### No surprise, CGPA is the most important feature...')
+    
+    
