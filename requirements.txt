@@ -1,7 +1,7 @@
 streamlit
 streamlit-option-menu
 seaborn
-statsmodel
+statsmodels
 sklearn
 matplotlib
 plotly
