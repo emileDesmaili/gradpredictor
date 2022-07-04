@@ -4,3 +4,4 @@ seaborn
 statsmodel
 sklearn
 matplotlib
+plotly
