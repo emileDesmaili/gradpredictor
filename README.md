@@ -1,8 +1,11 @@
 # Grad' Predictor
 
 Graduate admissions are stupid. This app is even stupider...
-The web-app is [here](https://emiledesmaili-gradpredictor-streamlit-app-plh36a.streamlitapp.com/)
-Sometimes, we just want to code classifciation/regression algos on numeric tabular data... 
+
+The web-app is [here](https://emiledesmaili-gradpredictor-streamlit-app-plh36a.streamlitapp.com/). What it does:
+
+- 1- KNN classifier that uses GPA, TOEFL, GRE SOP, LOR, RAships to determine to which university you apply to (self-censorship)
+- 2- Use all these features to predict probability of admission with regression methods that handle multicollinearity (Principal Components Regression or Partial Least Squares)
 
 Built with ❤️ by [emileDesmaili](https://github.com/emileDesmaili)
 
