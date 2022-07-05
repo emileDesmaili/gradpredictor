@@ -13,6 +13,10 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.cross_decomposition import PLSRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 # PAGE SETUP
 st.set_page_config(
     page_title="GradPredictor",
@@ -63,7 +67,6 @@ def load_classifier():
     loaded_model = pickle.load(open(filename, 'rb'))
     return loaded_model
 
-data = load_csv()
 
 if page =="ChanceMe!":
     model = load_predictor()
@@ -83,9 +86,8 @@ if page =="ChanceMe!":
             gre = st.number_input('GRE score',max_value=340, value=300, step=10)
         with filter6:
             gpa = st.number_input('GPA out of 10',max_value=10.,step=0.5, value=7.0)
-        
-        
         submitted = st.form_submit_button('ChanceMe!')
+
     uni_tier = classifier.predict(np.array([gre, toefl, sop, lor, gpa, research]).reshape(1,-1))
     uni_tier = int(uni_tier)
     if uni_tier == 5:
@@ -121,15 +123,53 @@ if page =='Model':
     st.write('#### The University Tier feature is problematic, and not usable because of self-censoship, so I decided to use a **KNN classifier** to infer it from other features')
     st.write('Table: Average values grouped by University Rating: self-censorship much...?')
     st.write(df.groupby(['University Rating']).mean())
-    st.write('#### Start simple:  Linear Regression... cannot be used')
+    st.write('#### Part 1: Using classification to model self-censorship')
+
+    models = ['K-NN','Naive Bayes Classifier','Decision Tree','Random Forest','AdaBoost']
+    models_sk = [KNeighborsClassifier(n_neighbors=10),GaussianNB(),DecisionTreeClassifier(),RandomForestClassifier(),AdaBoostClassifier()]
+    model_dict = dict(zip(models,models_sk))
+    X_tier = df.drop(['University Rating','Chance of Admit '], axis=1)
+    Y_tier = df['University Rating']
+    col1, col2 = st.columns(2)
+    with col1:
+        model = st.selectbox('Select Classifier',models)
+    with col2:
+        test_size = st.slider('Test size',0.05,1.,step=0.05,value=0.2)
+    classifier = model_dict[model]
+    X_train, X_test, y_train, y_test = train_test_split(X_tier, Y_tier,test_size = test_size, random_state=42)
+    classifier.fit(X_train.values, y_train.values)
+    st.write(f" Model accuracy **{classifier.score(X_test.values, y_test.values):.3f}**")
+    
+    with st.form('Test the model'):
+        filter1, filter2, filter3, filter4, filter5, filter6 = st.columns(6)
+        with filter1:
+            sop = st.slider('SOP strength',1,5,step=1)
+        with filter2:
+            research = st.checkbox('Research Experience?')
+        with filter3:
+            lor = st.slider('LORs strength',1,5,step=1)
+        with filter4:
+            toefl = st.number_input('TOEFL score',max_value=120, value= 100, step=1)
+        with filter5:
+            gre = st.number_input('GRE score',max_value=340, value=300, step=10)
+        with filter6:
+            gpa = st.number_input('GPA out of 10',max_value=10.,step=0.5, value=7.0)
+        submitted = st.form_submit_button('Predict University Rating')
+        
+    uni_tier = classifier.predict(np.array([gre, toefl, sop, lor, gpa, research]).reshape(1,-1))
+    st.metric('Predicted Rating /5 (higher is better)',int(uni_tier))
+
+
+    st.write('#### Part 2: Predicting Chance of Admit')
+    st.write('##### Start simple:  Linear Regression... cannot be used')
     
     col1, col2 = st.columns(2)
     with col1:
         st.write('Multi-collinearity')
         fig = px.imshow(df.drop(['Chance of Admit '],axis=1).corr(), text_auto=True)
         st.plotly_chart(fig, use_container_width=False)
+    
     with col2:
-        
         X = st.multiselect('Select Regressors', df.columns, ['CGPA'])
         Y = df['Chance of Admit ']
         model = sm.OLS(Y, df[X], hasconst=True)
@@ -146,7 +186,7 @@ if page =='Model':
         fig.update_layout(showlegend=True, xaxis_title='Predicted')
         st.plotly_chart(fig)
 
-    st.write('#### Given how multicollinear the data is, I decided to use **Projection methods** like **Partial Least Squares** & **Principal Components Regression**')
+    st.write('##### Given how multicollinear the data is, I decided to use **Projection methods** like **Partial Least Squares** & **Principal Components Regression**')
     
     col1, col2 = st.columns(2)
     with col1:
