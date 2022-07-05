@@ -172,7 +172,7 @@ if page =='Model':
     with col2:
         X = st.multiselect('Select Regressors', df.columns, ['CGPA'])
         Y = df['Chance of Admit ']
-        model = sm.OLS(Y, df[X], hasconst=True)
+        model = sm.OLS(Y, sm.add_constant(df[X]))
         results = model.fit()
         y_hat = results.predict()
         st.write(f'A regression on {str(X)} leads to an **R-squared of {np.round(100*results.rsquared_adj)}%** ')
@@ -225,5 +225,7 @@ if page =='Model':
 
         st.plotly_chart(fig)
         st.write('#### No surprise, CGPA is the most important feature...')
+        gpa_coef = np.round(100*coefs.loc['CGPA','PLS'])
+        st.write(f'##### According to the PLS model, a 1 point increase in GPA leads to a {gpa_coef} % increase in chance of admission')
     
     
