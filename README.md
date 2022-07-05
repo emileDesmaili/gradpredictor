@@ -1,6 +1,8 @@
-# gradpredictor
+# Grad' Predictor
 
-Predicting graduate admissions
+Graduate admissions are stupid. This app is even stupider...
+The web-app is [here](https://emiledesmaili-gradpredictor-streamlit-app-plh36a.streamlitapp.com/)
+Sometimes, we just want to code classifciation/regression algos on numeric tabular data... 
 
 Built with ❤️ by [emileDesmaili](https://github.com/emileDesmaili)
 
